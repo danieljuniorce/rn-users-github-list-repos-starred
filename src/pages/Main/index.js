@@ -31,6 +31,20 @@ import {
 import api from '../../services/api';
 
 class Main extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      newUsers: '',
+      stateRequest: false,
+      successOrErrorRequest: '',
+      newRequestUser: {},
+      emptyNewUsers: false,
+      users: [],
+      loading: false,
+    };
+  }
+
   static navigationOptions = {
     title: 'Usuário',
   };
@@ -39,16 +53,6 @@ class Main extends Component {
     navigation: PropTypes.shape({
       navigate: PropTypes.func,
     }).isRequired,
-  };
-
-  state = {
-    newUsers: '',
-    stateRequest: false,
-    successOrErrorRequest: '',
-    newRequestUser: {},
-    emptyNewUsers: false,
-    users: [],
-    loading: false,
   };
 
   async componentDidMount() {
@@ -78,6 +82,12 @@ class Main extends Component {
       Keyboard.dismiss();
 
       try {
+        users.forEach(user => {
+          if (user.login === newUsers) {
+            stop;
+          }
+        });
+
         const response = await api.get(`users/${newUsers}`);
 
         const data = {
@@ -94,8 +104,6 @@ class Main extends Component {
           users: [...users, data],
           loading: false,
         });
-
-        Keyboard.dismiss();
       } catch (err) {
         this.setState({
           stateRequest: true,
@@ -110,6 +118,7 @@ class Main extends Component {
 
     this.setState({
       emptyNewUsers: true,
+      loading: false,
     });
 
     return newUsers;
@@ -157,7 +166,11 @@ class Main extends Component {
                     uri: newRequestUser.avatar,
                   }}
                 />
-                <NameSuccess>{newRequestUser.name}</NameSuccess>
+                <NameSuccess>
+                  {newRequestUser.name !== null
+                    ? newRequestUser.name
+                    : newRequestUser.login}
+                </NameSuccess>
                 <ButtonReturnPageInitial
                   onPress={() => this.handlePageInitial()}
                 >
@@ -171,11 +184,12 @@ class Main extends Component {
                 <AvatarError
                   source={{
                     uri:
-                      'https://image.freepik.com/vetores-gratis/erro-404-nao-encontrado-efeito-de-falha_8024-4.jpg',
+                      'http://prints.ultracoloringpages.com/b578eaaba33e534fcfce3e67aa362b7e.png',
                   }}
                 />
-                <MessageError>Usuário não foi encontrado</MessageError>
-                <MessageError>Voltando a Tela Principal</MessageError>
+                <MessageError>
+                  Usuário já cadastrado ou Não Existe!
+                </MessageError>
                 <ButtonReturnPageInitial
                   onPress={() => this.handlePageInitial()}
                 >

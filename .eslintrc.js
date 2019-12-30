@@ -7,6 +7,7 @@ module.exports = {
     Atomics: 'readonly',
     SharedArrayBuffer: 'readonly',
     __DEV__: 'readonly',
+    stop: 'readonly',
   },
   parser: 'babel-eslint',
   parserOptions: {
@@ -30,5 +31,7 @@ module.exports = {
     'react/static-property-placement': 'off',
     'react/jsx-props-no-spreading': 'off',
     'react/sort-comp': 'off',
+    'no-restricted-globals': 'off',
+    'no-unused-expressions': 'off',
   },
 };

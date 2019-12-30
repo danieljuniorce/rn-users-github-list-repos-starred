@@ -139,7 +139,7 @@ export const Error = styled.View`
 `;
 
 export const MessageError = styled.Text`
-  font-size: 18px;
+  font-size: 14px;
   font-weight: bold;
   color: #333;
   text-align: center;
@@ -149,7 +149,6 @@ export const AvatarError = styled.Image`
   height: 140px;
   width: 140px;
   border-radius: 40px;
-  background: #eee;
 `;
 
 export const ButtonReturnPageInitial = styled(RectButton)`
