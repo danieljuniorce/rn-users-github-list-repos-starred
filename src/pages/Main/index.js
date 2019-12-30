@@ -17,6 +17,16 @@ import {
   Bio,
   ProfileButton,
   ProfileButtonText,
+  RequestsInfos,
+  Success,
+  AvatarSuccess,
+  NameSuccess,
+  MessageSuccess,
+  ButtonReturnPageInitial,
+  ButtonReturnPageInitialText,
+  Error,
+  AvatarError,
+  MessageError,
 } from './styles';
 import api from '../../services/api';
 
@@ -33,6 +43,10 @@ class Main extends Component {
 
   state = {
     newUsers: '',
+    stateRequest: false,
+    successOrErrorRequest: '',
+    newRequestUser: {},
+    emptyNewUsers: false,
     users: [],
     loading: false,
   };
@@ -58,24 +72,47 @@ class Main extends Component {
   handleAddUser = async () => {
     const { users, newUsers } = this.state;
 
-    this.setState({ loading: true });
+    if (newUsers !== '') {
+      this.setState({ loading: true, emptyNewUsers: false });
 
-    const response = await api.get(`users/${newUsers}`);
+      Keyboard.dismiss();
 
-    const data = {
-      name: response.data.name,
-      login: response.data.login,
-      bio: response.data.bio,
-      avatar: response.data.avatar_url,
-    };
+      try {
+        const response = await api.get(`users/${newUsers}`);
+
+        const data = {
+          name: response.data.name,
+          login: response.data.login,
+          bio: response.data.bio,
+          avatar: response.data.avatar_url,
+        };
+
+        this.setState({
+          stateRequest: true,
+          successOrErrorRequest: 'success',
+          newRequestUser: data,
+          users: [...users, data],
+          loading: false,
+        });
+
+        Keyboard.dismiss();
+      } catch (err) {
+        this.setState({
+          stateRequest: true,
+          successOrErrorRequest: 'error',
+          loading: false,
+        });
+        return false;
+      }
+
+      return newUsers;
+    }
 
     this.setState({
-      users: [...users, data],
-      newUsers: '',
-      loading: false,
+      emptyNewUsers: true,
     });
 
-    Keyboard.dismiss();
+    return newUsers;
   };
 
   handleNavigation = user => {
@@ -84,46 +121,118 @@ class Main extends Component {
     navigation.navigate('User', { user });
   };
 
+  handlePageInitial = () => {
+    const { navigation } = this.props;
+
+    this.setState({
+      stateRequest: false,
+      successOrErrorRequest: '',
+      newUsers: '',
+      loading: false,
+    });
+
+    navigation.navigate('Main');
+  };
+
   render() {
-    const { users, newUsers, loading } = this.state;
+    const {
+      users,
+      newUsers,
+      newRequestUser,
+      stateRequest,
+      successOrErrorRequest,
+      emptyNewUsers,
+      loading,
+    } = this.state;
 
     return (
-      <Container>
-        <Form>
-          <Input
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholder="Adicionar Usuário"
-            returnKeyType="send"
-            onSubmitEditing={this.handleAddUser}
-            value={newUsers}
-            onChangeText={text => this.setState({ newUsers: text })}
-          />
-          <SubmitButton loading={loading} onPress={() => this.handleAddUser()}>
-            {loading ? (
-              <LoadingButton color="#fff" />
+      <>
+        {stateRequest ? (
+          <RequestsInfos>
+            {successOrErrorRequest === 'success' ? (
+              <Success>
+                <MessageSuccess>Novo Usuário Adicionado</MessageSuccess>
+                <AvatarSuccess
+                  source={{
+                    uri: newRequestUser.avatar,
+                  }}
+                />
+                <NameSuccess>{newRequestUser.name}</NameSuccess>
+                <ButtonReturnPageInitial
+                  onPress={() => this.handlePageInitial()}
+                >
+                  <ButtonReturnPageInitialText>
+                    Voltar ao Início
+                  </ButtonReturnPageInitialText>
+                </ButtonReturnPageInitial>
+              </Success>
             ) : (
-              <TextButtonAdd>+</TextButtonAdd>
+              <Error>
+                <AvatarError
+                  source={{
+                    uri:
+                      'https://image.freepik.com/vetores-gratis/erro-404-nao-encontrado-efeito-de-falha_8024-4.jpg',
+                  }}
+                />
+                <MessageError>Usuário não foi encontrado</MessageError>
+                <MessageError>Voltando a Tela Principal</MessageError>
+                <ButtonReturnPageInitial
+                  onPress={() => this.handlePageInitial()}
+                >
+                  <ButtonReturnPageInitialText>
+                    Voltar ao Início
+                  </ButtonReturnPageInitialText>
+                </ButtonReturnPageInitial>
+              </Error>
             )}
-          </SubmitButton>
-        </Form>
+          </RequestsInfos>
+        ) : (
+          <Container>
+            <Form>
+              <Input
+                autoCapitalize="none"
+                autoCorrect={false}
+                placeholder={
+                  emptyNewUsers
+                    ? `Ops! você não digitou nada!`
+                    : `Adicionar Usuário`
+                }
+                returnKeyType="send"
+                onSubmitEditing={this.handleAddUser}
+                value={newUsers}
+                onChangeText={text => this.setState({ newUsers: text })}
+                empty={emptyNewUsers}
+              />
+              <SubmitButton
+                loading={loading}
+                onPress={() => this.handleAddUser()}
+              >
+                {loading ? (
+                  <LoadingButton color="#fff" />
+                ) : (
+                  <TextButtonAdd>+</TextButtonAdd>
+                )}
+              </SubmitButton>
+            </Form>
 
-        <List
-          data={users}
-          keyExtractor={user => user.login}
-          renderItem={({ item }) => (
-            <User>
-              <Avatar source={{ uri: item.avatar }} />
-              <Name>{item.name}</Name>
-              <Bio>{item.bio}</Bio>
+            <List
+              data={users}
+              keyExtractor={user => user.login}
+              renderItem={({ item }) => (
+                <User>
+                  <Avatar source={{ uri: item.avatar }} />
+                  <Name>{item.name !== null ? item.name : item.login}</Name>
+                  <Bio>{item.bio}</Bio>
 
-              <ProfileButton onPress={() => this.handleNavigation(item)}>
-                <ProfileButtonText>VER PERFIL</ProfileButtonText>
-              </ProfileButton>
-            </User>
-          )}
-        />
-      </Container>
+                  <ProfileButton onPress={() => this.handleNavigation(item)}>
+                    <ProfileButtonText>VER PERFIL</ProfileButtonText>
+                  </ProfileButton>
+                </User>
+              )}
+            />
+          </Container>
+        )}
+      </>
     );
   }
 }
